@@ -17,6 +17,7 @@ public enum AuthErrorStatus implements BaseCode {
     NOT_FOUND_USER(HttpStatus.NOT_FOUND, "AUTH_404_01", "존재하지 않는 유저입니다."),
     PASSWORD_MISMATCH(HttpStatus.BAD_REQUEST, "AUTH_400_01", "비밀번호가 일치하지 않습니다."),
     VERIFICATION_CODE_REQUIRED(HttpStatus.BAD_REQUEST, "AUTH_400_07", "인증 코드가 필요합니다."),
+    MAIL_SEND_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "AUTH_500_01", "이메일 전송에 실패했습니다. 다시 시도해주세요."),
     INVALID_AUTH_CODE(HttpStatus.BAD_REQUEST, "AUTH_400_02", "인증코드가 일치하지 않습니다.");
 
     private final HttpStatus status;
