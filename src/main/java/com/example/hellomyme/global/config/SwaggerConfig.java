@@ -28,7 +28,7 @@ public class SwaggerConfig {
                 .addSecurityItem(securityRequirement)
                 .components(components)
                 .info(new Info()
-                        .title("제주와랑 API")
+                        .title("HelloMyMe API")
                         .description("API 명세서")
                         .version("v1.0"));
     }
