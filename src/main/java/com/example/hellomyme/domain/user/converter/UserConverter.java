@@ -23,7 +23,7 @@ public class UserConverter {
         return User.builder()
                 .email(dto.email())
                 .password(encodedPassword)
-                .nickname(dto.nickname() + System.currentTimeMillis() % 10000)
+                .nickname(dto.nickname())
                 .role(RoleType.ROLE_USER)
                 .build();
     }
