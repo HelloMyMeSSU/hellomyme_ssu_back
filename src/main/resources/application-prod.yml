@@ -1,0 +1,12 @@
+spring:
+  datasource:
+    # DB_HOST 환경변수가 있으면 RDS 엔드포인트를 바라보고, 없으면 localhost 사용
+    url: jdbc:mysql://${DB_HOST:localhost}:3306/hellomyme?serverTimezone=UTC&useSSL=false&allowPublicKeyRetrieval=true
+    username: ${DB_USERNAME:admin} # RDS 마스터 사용자 이름
+    password: ${DB_PASSWORD}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: update # 초기 테이블 생성을 위해 update 권장 (추후 validate로 변경 가능)
+    show-sql: false

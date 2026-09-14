@@ -1,0 +1,69 @@
+name: Java CI/CD with Gradle & AWS EC2
+
+on:
+  push:
+    branches: [ "main" ] # main 브랜치에 push 될 때 자동 실행
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. 코드 체크아웃
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      # 2. JDK 17 세팅
+      - name: Set up JDK 17
+        uses: actions/setup-java@v3
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      # 3. Gradle 빌드 (테스트 제외)
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
+      - name: Build with Gradle
+        run: ./gradlew build -x test
+
+      # 4. 빌드된 JAR 파일을 AWS EC2로 전송
+      - name: Transfer JAR to EC2
+        uses: appleboy/scp-action@v0.1.4
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USERNAME }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          source: "build/libs/*.jar"
+          target: "~/app/"
+          strip_components: 2
+
+      # 5. EC2 서버에서 기존 프로세스 종료 후 AWS RDS 및 Secrets 주입하여 새 JAR 실행
+      - name: Deploy to EC2
+        uses: appleboy/ssh-action@v0.1.10
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USERNAME }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            # 1. 기존 실행 중인 프로세스 종료
+            CURRENT_PID=$(pgrep -f .jar)
+            if [ -n "$CURRENT_PID" ]; then
+              echo "Killing running process: $CURRENT_PID"
+              kill -15 $CURRENT_PID
+              sleep 5
+            fi
+            
+            # 2. RDS 접속정보 및 prod 프로필을 전달하여 최신 JAR 실행
+            cd ~/app
+            JAR_NAME=$(ls -t *.jar | head -n 1)
+            echo "Starting new process with AWS RDS: $JAR_NAME"
+            
+            nohup java -jar \
+              -Dspring.profiles.active=prod \
+              -DDB_HOST="${{ secrets.DB_HOST }}" \
+              -DDB_USERNAME="${{ secrets.DB_USERNAME }}" \
+              -DDB_PASSWORD="${{ secrets.DB_PASSWORD }}" \
+              -DMAIL_PASSWORD="${{ secrets.MAIL_PASSWORD }}" \
+              -DJWT_SECRET="${{ secrets.JWT_SECRET }}" \
+              $JAR_NAME > app.log 2>&1 &
