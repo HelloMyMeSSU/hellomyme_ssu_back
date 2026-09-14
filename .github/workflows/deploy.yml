@@ -38,7 +38,7 @@ jobs:
           target: "~/app/"
           strip_components: 2
 
-      # 5. EC2 서버에서 기존 프로세스 종료 후 AWS RDS 및 Secrets 주입하여 새 JAR 실행
+      # 5. EC2 서버에서 기존 프로세스 안전 종료 후 AWS RDS 및 Secrets 주입하여 새 JAR 실행
       - name: Deploy to EC2
         uses: appleboy/ssh-action@v0.1.10
         with:
@@ -46,19 +46,19 @@ jobs:
           username: ${{ secrets.EC2_USERNAME }}
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
-            # 1. 기존 실행 중인 프로세스 종료
-            CURRENT_PID=$(pgrep -f .jar)
+            # 1. 실행 중인 Spring Boot 프로세스 안전 종료 (Exit Code 0 처리)
+            CURRENT_PID=$(pgrep -f 'java -jar')
             if [ -n "$CURRENT_PID" ]; then
               echo "Killing running process: $CURRENT_PID"
-              kill -15 $CURRENT_PID
-              sleep 5
+              kill -9 $CURRENT_PID || true
+              sleep 3
             fi
-            
+
             # 2. RDS 접속정보 및 prod 프로필을 전달하여 최신 JAR 실행
             cd ~/app
             JAR_NAME=$(ls -t *.jar | head -n 1)
             echo "Starting new process with AWS RDS: $JAR_NAME"
-            
+
             nohup java -jar \
               -Dspring.profiles.active=prod \
               -DDB_HOST="${{ secrets.DB_HOST }}" \
@@ -67,3 +67,5 @@ jobs:
               -DMAIL_PASSWORD="${{ secrets.MAIL_PASSWORD }}" \
               -DJWT_SECRET="${{ secrets.JWT_SECRET }}" \
               $JAR_NAME > app.log 2>&1 &
+
+            sleep 2
