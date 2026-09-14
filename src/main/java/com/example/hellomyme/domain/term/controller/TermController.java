@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
 
 @RestController
-@RequestMapping("/terms")
+@RequestMapping("api/terms")
 @RequiredArgsConstructor
 public class TermController {
 
