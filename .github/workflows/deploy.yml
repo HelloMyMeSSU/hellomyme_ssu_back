@@ -2,7 +2,7 @@ name: Java CI/CD with Gradle & AWS EC2
 
 on:
   push:
-    branches: [ "main" ] # main 브랜치에 push 될 때 자동 실행
+    branches: [ "main" ] # main 브랜치에 push
 
 jobs:
   build-and-deploy:
