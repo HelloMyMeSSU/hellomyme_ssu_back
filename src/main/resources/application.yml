@@ -1,0 +1,24 @@
+server:
+  port: 8080
+
+spring:
+  profiles:
+    active: local # 기본 실행 프로파일 (로컬)
+
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: hellomyme.ssu@gmail.com
+    password: ${MAIL_PASSWORD}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+
+jwt:
+  token:
+    secret: ${JWT_SECRET}
+    expiration:
+      access: 3600000
