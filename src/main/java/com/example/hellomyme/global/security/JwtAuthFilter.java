@@ -20,6 +20,26 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
     private final JWTUtil jwtUtil;
 
+
+    @Override
+    protected boolean shouldNotFilter(HttpServletRequest request) throws ServletException {
+        String path = request.getRequestURI();
+
+        return path.startsWith("/auth/")
+                || path.startsWith("/api/auth/")
+                || path.startsWith("/users/login")
+                || path.startsWith("/users/signup")
+                || path.startsWith("/api/users/login")
+                || path.startsWith("/api/users/signup")
+                || path.startsWith("/terms")
+                || path.startsWith("/swagger-ui")
+                || path.startsWith("/swagger-resources")
+                || path.startsWith("/v3/api-docs")
+                || path.startsWith("/location")
+                || path.startsWith("/courses")
+                || path.startsWith("/tour");
+    }
+
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response,
                                     FilterChain filterChain) throws ServletException, IOException {
@@ -29,24 +49,27 @@ public class JwtAuthFilter extends OncePerRequestFilter {
         if (header != null && header.startsWith("Bearer ")) {
             String token = header.substring(7);
 
-            jwtUtil.validateToken(token);
+            try {
+                jwtUtil.validateToken(token);
 
-            Claims claims = jwtUtil.getClaims(token);
-            String email = claims.getSubject();
-            String role = claims.get("role", String.class);
-            Long userId = claims.get("userId", Long.class);
+                Claims claims = jwtUtil.getClaims(token);
+                String email = claims.getSubject();
+                String role = claims.get("role", String.class);
+                Long userId = claims.get("userId", Long.class);
 
-            PrincipalDetails principal = new PrincipalDetails(userId, email, role);
+                PrincipalDetails principal = new PrincipalDetails(userId, email, role);
 
-            UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(
-                    principal,
-                    null,
-                    principal.getAuthorities()
-            );
-            SecurityContextHolder.getContext().setAuthentication(auth);
+                UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(
+                        principal,
+                        null,
+                        principal.getAuthorities()
+                );
+                SecurityContextHolder.getContext().setAuthentication(auth);
+            } catch (Exception e) {
+                SecurityContextHolder.clearContext();
+            }
         }
 
         filterChain.doFilter(request, response);
     }
 }
-
