@@ -46,15 +46,15 @@ jobs:
           username: ${{ secrets.EC2_USERNAME }}
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
-            # 1. 자기 자신($$)을 제외하고 실행 중인 백엔드 java -jar 프로세스만 찾아 안전 종료
-            CURRENT_PID=$(pgrep -f 'java -jar' | grep -v $$ || true)
+            # 1. 실행 중인 Spring Boot 프로세스 안전 종료 (Exit Code 0 처리)
+            CURRENT_PID=$(pgrep -f 'java -jar')
             if [ -n "$CURRENT_PID" ]; then
               echo "Killing running process: $CURRENT_PID"
               kill -9 $CURRENT_PID || true
               sleep 3
             fi
 
-            # 2. RDS 접속정보 및 prod 프로필을 전달하여 최신 JAR 백그라운드 실행
+            # 2. RDS 접속정보 및 prod 프로필을 전달하여 최신 JAR 실행
             cd ~/app
             JAR_NAME=$(ls -t *.jar | head -n 1)
             echo "Starting new process with AWS RDS: $JAR_NAME"
